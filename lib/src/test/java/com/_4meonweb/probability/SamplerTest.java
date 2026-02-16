@@ -22,12 +22,16 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Sampler")
 class SamplerTest {
 
+    private static final String RNG_ALGORITHM = "L64X128MixRandom";
+    private static final String N_MUST_BE_POSITIVE = "n must be positive";
+    private static final String K_MUST_BE_NON_NEGATIVE = "k must be non-negative";
+
     private Sampler sampler;
 
     @BeforeEach
     void setUp() {
         // Use a fixed seed for deterministic tests
-        sampler = new Sampler(RandomGenerator.of("L64X128MixRandom"));
+        sampler = new Sampler(RandomGenerator.of(RNG_ALGORITHM));
     }
 
     private static void assertAllInRange(List<Integer> values, int n) {
@@ -48,16 +52,16 @@ class SamplerTest {
     private static Stream<Arguments> emptySampleProviders() {
         return Stream.of(
                 Arguments.of("sampleWithReplacement (int)",
-                        (Supplier<Stream<?>>) () -> new Sampler(RandomGenerator.of("L64X128MixRandom"))
+                        (Supplier<Stream<?>>) () -> new Sampler(RandomGenerator.of(RNG_ALGORITHM))
                                 .sampleWithReplacement(10, 0)),
                 Arguments.of("sampleWithoutReplacement (int)",
-                        (Supplier<Stream<?>>) () -> new Sampler(RandomGenerator.of("L64X128MixRandom"))
+                        (Supplier<Stream<?>>) () -> new Sampler(RandomGenerator.of(RNG_ALGORITHM))
                                 .sampleWithoutReplacement(10, 0)),
                 Arguments.of("sampleWithReplacement (List)",
-                        (Supplier<Stream<?>>) () -> new Sampler(RandomGenerator.of("L64X128MixRandom"))
+                        (Supplier<Stream<?>>) () -> new Sampler(RandomGenerator.of(RNG_ALGORITHM))
                                 .sampleWithReplacement(List.of("a", "b"), 0)),
                 Arguments.of("sampleWithoutReplacement (List)",
-                        (Supplier<Stream<?>>) () -> new Sampler(RandomGenerator.of("L64X128MixRandom"))
+                        (Supplier<Stream<?>>) () -> new Sampler(RandomGenerator.of(RNG_ALGORITHM))
                                 .sampleWithoutReplacement(List.of("a", "b"), 0)));
     }
 
@@ -130,7 +134,7 @@ class SamplerTest {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
                     () -> sampler.sampleWithReplacement(n, 5));
-            assertTrue(exception.getMessage().contains("n must be positive"));
+            assertTrue(exception.getMessage().contains(N_MUST_BE_POSITIVE));
         }
 
         @ParameterizedTest
@@ -140,7 +144,7 @@ class SamplerTest {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
                     () -> sampler.sampleWithReplacement(10, k));
-            assertTrue(exception.getMessage().contains("k must be non-negative"));
+            assertTrue(exception.getMessage().contains(K_MUST_BE_NON_NEGATIVE));
         }
 
         @ParameterizedTest
@@ -216,7 +220,7 @@ class SamplerTest {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
                     () -> sampler.sampleWithoutReplacement(n, 5));
-            assertTrue(exception.getMessage().contains("n must be positive"));
+            assertTrue(exception.getMessage().contains(N_MUST_BE_POSITIVE));
         }
 
         @ParameterizedTest
@@ -226,7 +230,7 @@ class SamplerTest {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
                     () -> sampler.sampleWithoutReplacement(10, k));
-            assertTrue(exception.getMessage().contains("k must be non-negative"));
+            assertTrue(exception.getMessage().contains(K_MUST_BE_NON_NEGATIVE));
         }
 
         @ParameterizedTest
@@ -279,7 +283,7 @@ class SamplerTest {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
                     () -> sampler.sampleWithReplacement(source, -1));
-            assertTrue(exception.getMessage().contains("k must be non-negative"));
+            assertTrue(exception.getMessage().contains(K_MUST_BE_NON_NEGATIVE));
         }
 
         @Test
@@ -333,7 +337,7 @@ class SamplerTest {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
                     () -> sampler.sampleWithoutReplacement(source, -1));
-            assertTrue(exception.getMessage().contains("k must be non-negative"));
+            assertTrue(exception.getMessage().contains(K_MUST_BE_NON_NEGATIVE));
         }
 
         @Test

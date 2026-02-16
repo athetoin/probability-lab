@@ -11,6 +11,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Sequence")
 class SequenceTest {
 
+    private static final String COLLECTION_MUST_NOT_BE_NULL = "collection must not be null";
+
     @Nested
     @DisplayName("range")
     class RangeTests {
@@ -237,7 +239,7 @@ class SequenceTest {
         void shouldThrowForNullCollection() {
             var exception = assertThrows(IllegalArgumentException.class,
                     () -> Sequence.seqAlong(null));
-            assertEquals("collection must not be null", exception.getMessage());
+            assertEquals(COLLECTION_MUST_NOT_BE_NULL, exception.getMessage());
         }
     }
 
@@ -314,7 +316,7 @@ class SequenceTest {
         void shouldThrowForNullCollection() {
             var exception = assertThrows(IllegalArgumentException.class,
                     () -> Sequence.repEach(null, 3));
-            assertEquals("collection must not be null", exception.getMessage());
+            assertEquals(COLLECTION_MUST_NOT_BE_NULL, exception.getMessage());
         }
     }
 
@@ -364,7 +366,7 @@ class SequenceTest {
         void shouldThrowForNullCollection() {
             var exception = assertThrows(IllegalArgumentException.class,
                     () -> Sequence.repTimes((List<Integer>) null, 3));
-            assertEquals("collection must not be null", exception.getMessage());
+            assertEquals(COLLECTION_MUST_NOT_BE_NULL, exception.getMessage());
         }
     }
 
