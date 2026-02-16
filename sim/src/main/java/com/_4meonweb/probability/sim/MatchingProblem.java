@@ -2,6 +2,7 @@ package com._4meonweb.probability.sim;
 
 import com._4meonweb.probability.Sampler;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.random.RandomGenerator;
 import java.util.stream.IntStream;
 
@@ -22,13 +23,8 @@ public class MatchingProblem implements Simulation {
     }
 
     private static boolean hasMatch(int n, Sampler sampler) {
-        // Your library already has R-like sampling: sampleIntRange(n)
-        int[] perm = sampler.permutation(n)
-                .mapToInt(Integer::intValue)
-                .toArray();
-
-        // Check if any position matches
-        return IntStream.range(0, n)
-                .anyMatch(i -> perm[i] == i);
+        AtomicInteger index = new AtomicInteger(0);
+        return sampler.permutation(n)
+                .anyMatch(value -> value == index.getAndIncrement());
     }
 }
