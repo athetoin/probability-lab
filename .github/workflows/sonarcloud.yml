@@ -33,6 +33,8 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
+          projectBaseDir: lib
           args: >
             -Dsonar.projectKey=athetoin_probability-lab
             -Dsonar.organization=athetoin
+            -Dsonar.java.binaries=build/classes/java/main
