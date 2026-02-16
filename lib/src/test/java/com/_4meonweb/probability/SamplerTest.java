@@ -88,7 +88,7 @@ class SamplerTest {
         @Test
         @DisplayName("should create Sampler with valid RandomGenerator")
         void shouldCreateSamplerWithValidRandomGenerator() {
-            RandomGenerator testRng = RandomGenerator.of("L64X128MixRandom");
+            RandomGenerator testRng = RandomGenerator.of(RNG_ALGORITHM);
             assertDoesNotThrow(() -> new Sampler(testRng));
         }
     }
@@ -458,7 +458,7 @@ class SamplerTest {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
                     () -> sampler.permutation(n));
-            assertTrue(exception.getMessage().contains("n must be positive"));
+            assertTrue(exception.getMessage().contains(N_MUST_BE_POSITIVE));
         }
 
         @ParameterizedTest
