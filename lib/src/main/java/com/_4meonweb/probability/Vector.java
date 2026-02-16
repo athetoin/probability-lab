@@ -1,6 +1,5 @@
 package com._4meonweb.probability;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -137,9 +136,11 @@ public final class Vector {
      */
     public Vector excludeIndex(int index) {
         ensureValidIndex(index);
-        var copy = new ArrayList<>(xs);
-        copy.remove(index - 1);
-        return new Vector(copy);
+        var filtered = IntStream.range(0, xs.size())
+                .filter(i -> i != index - 1)
+                .mapToObj(xs::get)
+                .toList();
+        return new Vector(filtered);
     }
 
     /**

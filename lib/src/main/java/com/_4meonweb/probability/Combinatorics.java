@@ -61,12 +61,9 @@ public class Combinatorics {
         k = Math.min(k, n - k);
 
         // Use multiplicative formula to avoid overflow as long as possible
-        long result = 1;
-        for (int i = 0; i < k; i++) {
-            result = result * (n - i) / (i + 1);
-        }
-
-        return result;
+        return IntStream.range(0, k)
+                .boxed()
+                .reduce(1L, (result, i) -> result * (n - i) / (i + 1), (a, b) -> a * b);
     }
 
     /**

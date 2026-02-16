@@ -183,16 +183,15 @@ public class Sequence {
      *
      * @param lists collections to concatenate
      * @param <T>   element type
-     * @return List containing all elements
+     * @return Stream containing all elements
      */
     @SafeVarargs
-    public static <T> List<T> concat(Collection<T>... lists) {
+    public static <T> Stream<T> concat(Collection<T>... lists) {
         if (lists == null) {
             throw new IllegalArgumentException("lists must not be null");
         }
         return Stream.of(lists)
                 .filter(java.util.Objects::nonNull)
-                .flatMap(Collection::stream)
-                .toList();
+                .flatMap(Collection::stream);
     }
 }

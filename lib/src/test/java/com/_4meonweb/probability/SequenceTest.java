@@ -380,21 +380,21 @@ class SequenceTest {
             var result = Sequence.concat(
                     List.of(1, 2),
                     List.of(3, 4),
-                    List.of(5, 6));
+                    List.of(5, 6)).toList();
             assertEquals(List.of(1, 2, 3, 4, 5, 6), result);
         }
 
         @Test
         @DisplayName("concatenates single collection")
         void shouldConcatenateSingleCollection() {
-            var result = Sequence.concat(List.of(1, 2, 3));
+            var result = Sequence.concat(List.of(1, 2, 3)).toList();
             assertEquals(List.of(1, 2, 3), result);
         }
 
         @Test
         @DisplayName("returns empty when no collections provided")
         void shouldReturnEmptyWhenNoCollections() {
-            var result = Sequence.concat();
+            var result = Sequence.concat().toList();
             assertTrue(result.isEmpty());
         }
 
@@ -404,7 +404,7 @@ class SequenceTest {
             var result = Sequence.concat(
                     List.of(1, 2),
                     List.of(),
-                    List.of(3, 4));
+                    List.of(3, 4)).toList();
             assertEquals(List.of(1, 2, 3, 4), result);
         }
 
@@ -413,7 +413,7 @@ class SequenceTest {
         void shouldConcatenateDifferentCollectionTypes() {
             var result = Sequence.concat(
                     List.of("a", "b"),
-                    java.util.Set.of("c", "d"));
+                    java.util.Set.of("c", "d")).toList();
             assertEquals(4, result.size());
             assertTrue(result.containsAll(List.of("a", "b", "c", "d")));
         }
@@ -432,7 +432,7 @@ class SequenceTest {
             var result = Sequence.concat(
                     List.of(1, 2),
                     null,
-                    List.of(3, 4));
+                    List.of(3, 4)).toList();
             assertEquals(List.of(1, 2, 3, 4), result);
         }
     }
@@ -454,7 +454,7 @@ class SequenceTest {
         void shouldCombineSeqLenWithConcat() {
             var seq1 = Sequence.seqLen(3).toList();
             var seq2 = Sequence.seqLen(2).toList();
-            var result = Sequence.concat(seq1, seq2);
+            var result = Sequence.concat(seq1, seq2).toList();
             assertEquals(List.of(1, 2, 3, 1, 2), result);
         }
 
