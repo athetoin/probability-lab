@@ -20,6 +20,9 @@ dependencies {
     // Use JUnit Jupiter for testing.
     testImplementation(libs.junit.jupiter)
 
+    // Use AssertJ for fluent assertions.
+    testImplementation(libs.assertj.core)
+
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // This dependency is exported to consumers, that is to say found on their compile classpath.

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Vector")
@@ -20,43 +21,34 @@ class VectorTest {
     class ConstructorTests {
 
         @Test
-        @DisplayName("rejects null list")
-        void shouldRejectNullList() {
-            NullPointerException exception = assertThrows(
-                    NullPointerException.class,
-                    () -> new Vector(null));
-            assertEquals("xs cannot be null", exception.getMessage());
-        }
-
-        @Test
-        @DisplayName("rejects null element")
-        void shouldRejectNullElement() {
-            List<Double> values = java.util.Arrays.asList(1.0, null);
-            IllegalArgumentException exception = assertThrows(
-                    IllegalArgumentException.class,
-                    () -> new Vector(values));
-            assertEquals("xs must not contain null values", exception.getMessage());
-        }
-    }
-
-    @Nested
-    @DisplayName("Stream factory")
-    class StreamFactoryTests {
-
-        @Test
-        @DisplayName("creates vector from stream")
-        void shouldCreateVectorFromStream() {
-            Vector vector = Vector.fromStream(Stream.of(1.0, 2.0, 3.0));
-            assertEquals(List.of(1.0, 2.0, 3.0), vector.toList());
-        }
-
-        @Test
         @DisplayName("rejects null stream")
         void shouldRejectNullStream() {
             NullPointerException exception = assertThrows(
                     NullPointerException.class,
-                    () -> Vector.fromStream(null));
+                    () -> new Vector((Stream<Double>) null));
             assertEquals("values cannot be null", exception.getMessage());
+        }
+
+        @Test
+        @DisplayName("rejects stream with null elements")
+        void shouldRejectStreamWithNullElements() {
+            Stream<Double> values = Stream.of(1.0, null);
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new Vector(values));
+            assertEquals("values must not contain null elements", exception.getMessage());
+        }
+    }
+
+    @Nested
+    @DisplayName("Stream creation")
+    class StreamCreationTests {
+
+        @Test
+        @DisplayName("creates vector from stream")
+        void shouldCreateVectorFromStream() {
+            Vector vector = new Vector(Stream.of(1.0, 2.0, 3.0));
+            assertThat(vector.stream()).containsExactly(1.0, 2.0, 3.0);
         }
     }
 
@@ -67,13 +59,13 @@ class VectorTest {
         @Test
         @DisplayName("sum returns 0 for empty vector")
         void sumShouldHandleEmptyVector() {
-            assertEquals(0.0, new Vector(List.of()).sum());
+            assertEquals(0.0, new Vector(Stream.empty()).sum());
         }
 
         @Test
         @DisplayName("max rejects empty vector")
         void maxShouldRejectEmptyVector() {
-            Vector empty = new Vector(List.of());
+            Vector empty = new Vector(Stream.empty());
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
                     empty::max);
@@ -83,7 +75,7 @@ class VectorTest {
         @Test
         @DisplayName("min rejects empty vector")
         void minShouldRejectEmptyVector() {
-            Vector empty = new Vector(List.of());
+            Vector empty = new Vector(Stream.empty());
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
                     empty::min);
@@ -98,6 +90,41 @@ class VectorTest {
     }
 
     @Nested
+    @DisplayName("Stream access")
+    class StreamAccessTests {
+
+        @Test
+        @DisplayName("stream returns DoubleStream of values")
+        void shouldReturnDoubleStream() {
+            Vector vec = Vector.of(1, 2, 3);
+            double sum = vec.stream().sum();
+            assertEquals(6.0, sum);
+        }
+
+        @Test
+        @DisplayName("stream allows lazy processing")
+        void shouldAllowLazyProcessing() {
+            Vector vec = Vector.of(1, 2, 3, 4, 5);
+            double result = vec.stream()
+                    .filter(x -> x > 2)
+                    .map(x -> x * 2)
+                    .sum();
+            assertEquals(24.0, result); // (3 + 4 + 5) * 2
+        }
+
+        @Test
+        @DisplayName("stream can be collected back to vector")
+        void shouldCollectBackToVector() {
+            Vector vec = Vector.of(1, 2, 3);
+            Vector doubled = new Vector(
+                    vec.stream()
+                            .map(x -> x * 2)
+                            .boxed());
+            assertThat(doubled.stream()).containsExactly(2.0, 4.0, 6.0);
+        }
+    }
+
+    @Nested
     @DisplayName("Subvector extraction")
     class SubvectorTests {
 
@@ -105,7 +132,7 @@ class VectorTest {
         @DisplayName("slice returns inclusive range")
         void sliceShouldReturnInclusiveRange() {
             Vector vector = Vector.of(1, 2, 3, 4, 5);
-            assertEquals(List.of(2.0, 3.0, 4.0), vector.slice(2, 4).toList());
+            assertThat(vector.slice(2, 4).stream()).containsExactly(2.0, 3.0, 4.0);
         }
 
         @Test
@@ -141,14 +168,14 @@ class VectorTest {
         @DisplayName("excludeIndex removes element")
         void excludeIndexShouldRemoveElement() {
             Vector vector = Vector.of(1, 2, 3, 4);
-            assertEquals(List.of(1.0, 3.0, 4.0), vector.excludeIndex(2).toList());
+            assertThat(vector.excludeIndex(2).stream()).containsExactly(1.0, 3.0, 4.0);
         }
 
         @Test
         @DisplayName("excludeIndices removes multiple elements")
         void excludeIndicesShouldRemoveMultipleElements() {
             Vector vector = Vector.of(1, 2, 3, 4, 5);
-            assertEquals(List.of(1.0, 3.0, 5.0), vector.excludeIndices(List.of(4, 2, 2)).toList());
+            assertThat(vector.excludeIndices(List.of(4, 2, 2)).stream()).containsExactly(1.0, 3.0, 5.0);
         }
 
         @Test
@@ -176,7 +203,7 @@ class VectorTest {
         void addShouldRecycle() {
             Vector xs = Vector.of(1, 2, 3, 4);
             Vector ys = Vector.of(10, 20);
-            assertEquals(List.of(11.0, 22.0, 13.0, 24.0), xs.add(ys).toList());
+            assertThat(xs.add(ys).stream()).containsExactly(11.0, 22.0, 13.0, 24.0);
         }
 
         @Test
@@ -184,7 +211,7 @@ class VectorTest {
         void subtractShouldRecycle() {
             Vector xs = Vector.of(5, 6, 7);
             Vector ys = Vector.of(1);
-            assertEquals(List.of(4.0, 5.0, 6.0), xs.subtract(ys).toList());
+            assertThat(xs.subtract(ys).stream()).containsExactly(4.0, 5.0, 6.0);
         }
 
         @Test
@@ -192,7 +219,7 @@ class VectorTest {
         void multiplyShouldRecycle() {
             Vector xs = Vector.of(2, 3, 4, 5);
             Vector ys = Vector.of(2, 4);
-            assertEquals(List.of(4.0, 12.0, 8.0, 20.0), xs.multiply(ys).toList());
+            assertThat(xs.multiply(ys).stream()).containsExactly(4.0, 12.0, 8.0, 20.0);
         }
 
         @Test
@@ -200,7 +227,7 @@ class VectorTest {
         void divideShouldRecycle() {
             Vector xs = Vector.of(10, 20, 30, 40);
             Vector ys = Vector.of(2);
-            assertEquals(List.of(5.0, 10.0, 15.0, 20.0), xs.divide(ys).toList());
+            assertThat(xs.divide(ys).stream()).containsExactly(5.0, 10.0, 15.0, 20.0);
         }
 
         @Test
@@ -214,7 +241,7 @@ class VectorTest {
         @Test
         @DisplayName("rejects empty vectors")
         void shouldRejectEmptyVectors() {
-            Vector empty = new Vector(List.of());
+            Vector empty = new Vector(Stream.empty());
             Vector xs = Vector.of(1, 2, 3);
             assertThrows(IllegalArgumentException.class, () -> empty.add(xs));
             assertThrows(IllegalArgumentException.class, () -> xs.add(empty));
@@ -247,15 +274,76 @@ class VectorTest {
         @Test
         @DisplayName("recycle rejects non-zero target when empty")
         void recycleShouldRejectNonZeroTargetWhenEmpty() {
-            Vector empty = new Vector(List.of());
+            Vector empty = new Vector(Stream.empty());
             assertThrows(IllegalArgumentException.class, () -> empty.recycle(1));
         }
 
         @Test
         @DisplayName("recycle allows zero target length")
         void recycleShouldAllowZeroTargetLength() {
-            Vector empty = new Vector(List.of());
+            Vector empty = new Vector(Stream.empty());
             assertEquals(0, empty.recycle(0).length());
+        }
+    }
+
+    @Nested
+    @DisplayName("Tabulate")
+    class TabulateTests {
+
+        @Test
+        @DisplayName("counts frequency of positive integer values")
+        void shouldCountFrequencies() {
+            Vector vec = Vector.of(1, 2, 1, 3, 2, 1);
+            Vector result = vec.tabulate();
+            assertThat(result.stream()).containsExactly(3.0, 2.0, 1.0);
+        }
+
+        @Test
+        @DisplayName("handles single value")
+        void shouldHandleSingleValue() {
+            Vector vec = Vector.of(5, 5, 5);
+            Vector result = vec.tabulate();
+            assertThat(result.stream()).containsExactly(0.0, 0.0, 0.0, 0.0, 3.0);
+        }
+
+        @Test
+        @DisplayName("ignores values less than 1")
+        void shouldIgnoreValuesLessThanOne() {
+            Vector vec = Vector.of(1, 0, -1, 2, 0.5, 3);
+            Vector result = vec.tabulate();
+            assertThat(result.stream()).containsExactly(1.0, 1.0, 1.0);
+        }
+
+        @Test
+        @DisplayName("handles consecutive values starting from 1")
+        void shouldHandleConsecutiveValues() {
+            Vector vec = Vector.of(1, 1, 2, 2, 2, 3);
+            Vector result = vec.tabulate();
+            assertThat(result.stream()).containsExactly(2.0, 3.0, 1.0);
+        }
+
+        @Test
+        @DisplayName("throws exception for empty vector")
+        void shouldThrowForEmptyVector() {
+            Vector empty = new Vector(Stream.empty());
+            assertThrows(IllegalArgumentException.class, empty::tabulate);
+        }
+
+        @Test
+        @DisplayName("throws exception when no positive values")
+        void shouldThrowForNoPositiveValues() {
+            Vector vec = Vector.of(0, -1, -2, 0.5);
+            assertThrows(IllegalArgumentException.class, vec::tabulate);
+        }
+
+        @Test
+        @DisplayName("uses 1-based indexing in result")
+        void shouldUseOneBasedIndexing() {
+            Vector vec = Vector.of(1, 2, 1, 3, 2, 1);
+            Vector result = vec.tabulate();
+            assertEquals(3.0, result.at(1)); // value 1 appears 3 times
+            assertEquals(2.0, result.at(2)); // value 2 appears 2 times
+            assertEquals(1.0, result.at(3)); // value 3 appears 1 time
         }
     }
 }

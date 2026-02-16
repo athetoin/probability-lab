@@ -1,6 +1,5 @@
 package com._4meonweb.probability;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -15,18 +14,20 @@ public final class Vector {
     private final List<Double> xs;
 
     /**
-     * Creates a vector from a list of numbers. The list is defensively copied.
+     * Creates a vector from a stream of boxed values.
+     * This is the primary constructor for creating vectors from any source.
      *
-     * @param xs values to store
-     * @throws NullPointerException     if xs is null
-     * @throws IllegalArgumentException if xs contains null values
+     * @param values stream of values to store
+     * @throws NullPointerException     if values is null
+     * @throws IllegalArgumentException if values contains null elements
      */
-    public Vector(List<Double> xs) {
-        Objects.requireNonNull(xs, "xs cannot be null");
-        if (xs.stream().anyMatch(Objects::isNull)) {
-            throw new IllegalArgumentException("xs must not contain null values");
+    public Vector(Stream<Double> values) {
+        Objects.requireNonNull(values, "values cannot be null");
+        var list = values.toList();
+        if (list.stream().anyMatch(Objects::isNull)) {
+            throw new IllegalArgumentException("values must not contain null elements");
         }
-        this.xs = List.copyOf(xs);
+        this.xs = list;
     }
 
     /**
@@ -38,28 +39,17 @@ public final class Vector {
      */
     public static Vector of(double... values) {
         Objects.requireNonNull(values, "values cannot be null");
-        return new Vector(DoubleStream.of(values).boxed().toList());
+        return new Vector(DoubleStream.of(values).boxed());
     }
 
     /**
-     * Creates a vector from a stream of boxed values.
+     * Returns a stream of the values for lazy processing.
+     * Use this to avoid intermediate Vector creation when chaining operations.
      *
-     * @param values stream of values to store
-     * @return a new vector containing the streamed values
-     * @throws NullPointerException if values is null
+     * @return stream of values
      */
-    public static Vector fromStream(Stream<Double> values) {
-        Objects.requireNonNull(values, "values cannot be null");
-        return new Vector(values.toList());
-    }
-
-    /**
-     * Returns an immutable view of the stored values.
-     *
-     * @return immutable list view of values
-     */
-    public List<Double> toList() {
-        return Collections.unmodifiableList(xs);
+    public DoubleStream stream() {
+        return xs.stream().mapToDouble(Double::doubleValue);
     }
 
     /**
@@ -68,7 +58,7 @@ public final class Vector {
      * @return sum of values
      */
     public double sum() {
-        return xs.stream().mapToDouble(Double::doubleValue).sum();
+        return stream().sum();
     }
 
     /**
@@ -79,7 +69,7 @@ public final class Vector {
      */
     public double max() {
         ensureNotEmpty("max");
-        return xs.stream().mapToDouble(Double::doubleValue).max().orElseThrow();
+        return stream().max().orElseThrow();
     }
 
     /**
@@ -90,7 +80,7 @@ public final class Vector {
      */
     public double min() {
         ensureNotEmpty("min");
-        return xs.stream().mapToDouble(Double::doubleValue).min().orElseThrow();
+        return stream().min().orElseThrow();
     }
 
     /**
@@ -112,7 +102,7 @@ public final class Vector {
      */
     public Vector slice(int from, int to) {
         ensureValidSlice(from, to);
-        return new Vector(xs.subList(from - 1, to));
+        return new Vector(xs.subList(from - 1, to).stream());
     }
 
     /**
@@ -138,8 +128,7 @@ public final class Vector {
         ensureValidIndex(index);
         var filtered = IntStream.range(0, xs.size())
                 .filter(i -> i != index - 1)
-                .mapToObj(xs::get)
-                .toList();
+                .mapToObj(xs::get);
         return new Vector(filtered);
     }
 
@@ -166,8 +155,7 @@ public final class Vector {
         }
         var filtered = IntStream.range(0, xs.size())
                 .filter(i -> !toRemove.contains(i + 1))
-                .mapToObj(xs::get)
-                .toList();
+                .mapToObj(xs::get);
         return new Vector(filtered);
     }
 
@@ -236,16 +224,43 @@ public final class Vector {
             throw new IllegalArgumentException("targetLength must be non-negative, got: " + targetLength);
         }
         if (targetLength == 0) {
-            return new Vector(List.of());
+            return new Vector(Stream.empty());
         }
         ensureNotEmpty("recycle");
         if (targetLength % xs.size() != 0) {
             throw new IllegalArgumentException("targetLength must be a multiple of vector length");
         }
         var recycled = IntStream.range(0, targetLength)
-                .mapToObj(i -> xs.get(i % xs.size()))
-                .toList();
+                .mapToObj(i -> xs.get(i % xs.size()));
         return new Vector(recycled);
+    }
+
+    /**
+     * Tabulates the frequency counts of positive integer values.
+     * Values less than 1 are ignored. The result vector has one element per
+     * possible value, where value 1 maps to index 1, value 2 maps to index 2, etc.
+     * The number of bins is inferred from the maximum value in this vector.
+     *
+     * @return a new vector containing frequency counts
+     * @throws IllegalArgumentException if the vector is empty or contains no
+     *                                  positive integer values
+     */
+    public Vector tabulate() {
+        ensureNotEmpty("tabulate");
+
+        int maxValue = stream()
+                .filter(x -> x >= 1)
+                .mapToInt(x -> (int) x)
+                .max()
+                .orElseThrow(() -> new IllegalArgumentException("Vector contains no positive integer values"));
+
+        var counts = IntStream.rangeClosed(1, maxValue)
+                .mapToDouble(value -> stream()
+                        .filter(x -> x >= 1 && (int) x == value)
+                        .count())
+                .boxed();
+
+        return new Vector(counts);
     }
 
     private Vector combine(Vector ys, DoubleBinaryOperator op) {
@@ -258,8 +273,7 @@ public final class Vector {
         }
         var combined = IntStream.range(0, targetLength)
                 .mapToDouble(i -> op.applyAsDouble(xs.get(i % xs.size()), ys.xs.get(i % ys.xs.size())))
-                .boxed()
-                .toList();
+                .boxed();
         return new Vector(combined);
     }
 
